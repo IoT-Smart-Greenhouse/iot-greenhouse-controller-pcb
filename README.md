@@ -36,6 +36,7 @@ The IoT greenhouse controller board offers the following features:
 - Support of a water flow sensor to measure dispensed water with an accuracy of a couple of ml
 - Pump Control interface to control 12V water pumps or relais to control 120/240V pumps
 - Camera Interface to connenct a low cost OV2640 or OV5640 camera module
+- SD Card interface to store Photos and historical sensor data
 - Plenty of 5V Analog Input pins (via Daisy-Chaining you can connect 8/16/24/32... sensors to the main unit) to connect low cost capacitve soil moisture sensors (e.g. https://amzn.eu/d/bsQ1Nxg)
 - Plenty of digital output pins to control external components like LED light strings, solenoid water valves, fans etc.
 - interfaces to control two low cost stepper motors (e.g. 28BYJ-48) with ULN2003 driver (4 pin stepper driver) (e.g. https://amzn.eu/d/im3X76l)
@@ -48,3 +49,31 @@ The IoT greenhouse controller board offers the following features:
 - WiFi connectivity to allow controlling the IoT Greenhouse via the Internet and local WiFi Network
 - Single supply voltage (12-24V) to provide all needed voltages for MCUs (3.3 and 5V), Camera, Sensors and Actors
 
+# Architecture of the board and modules
+The different modules are designed as a single PCB with small bridges for easy cutting / separation of the modules after fabrication. This design choice was done to reduce production costs, since all modules can be produced in a single PCB Layout rather than multiple inndividual jobs. Since the boards share a good amount of components, the costs for placement and setup of the pick&place machines can be reduced by manufacturing all modules as a single board (at least for small batches to be produced).
+
+## Modules
+The Schematics and Gerber Files provide the needed fabrication data to manufacture the follwing boards which are connected to each other to allow a modular greenhouse controller design:
+- Main Board
+    - containning the ESP32 and ATMEGA MCU as the heart of the greenhouse controller system
+    - providing SDCard interface, USB Interface, Programming header for ESP32 annd ATMEGA, IC2 inteface, Camera Interface, RS485 Interface
+- Valve Controller Board
+    - connected to main Board via RS485 intnerface (allowing long distannce connection up to several hundred meters if separate Power Supply is used for the valve controller board)
+    - daisy chainable to connect multuple boards in series
+    - control up to 8 Solenoid water valves per valve controller board
+    - read up to 8 Analog input values (e.g. Soil Moisture Sensors) per valve controller board
+- Power Supply Board
+    - Step Down Voltage regulator to provide 5V from the provided Input Voltage
+    - accepts 6-24V input supply voltage (12V recommended)
+    - generates 3.3, 2.8, 1.5 V from the 5V Rail for Camera, ESP32 and sensors/actors
+
+## Communication 
+The ESP32 communnicates via Serial Interface with the ATMEGA "Co Processor".
+This allows also for flashing the ATMEGA from the ESP32 for Over The Air Updates.
+The Main Board communicates with the Valve Controller Baord(s) via the RS485 Interface.
+
+The ESP32 provides WiFi capabilties which allow the Greenhouse controller to be connected to the local WiFi and by that to the Internet if needed. Connectivity to MQTT brokers or a HTTP based control User Interface are possible.
+
+Bluetooth and BLE capabities are also provided by the ESP32 to allow low power connectivity applications.
+
+The ESP32 S3 provides also native USB support, to allow programming the ESP32 via USB interface. Additionally a serial programming header is added to the board for initial programming of the ESP32 via an USB to Serial Adapter alonng with the needed RESET and BOOT tactile switches
